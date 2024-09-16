@@ -1,101 +1,88 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from 'react';
+import { NewToDoForm } from './_components/new-todo-form';
+
+type ToDoItemType = {
+  title: string;
+  description: string;
+  completed: boolean;
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [todos, setTodos] = useState<ToDoItemType[]>([
+    { title: 'Buy milk', description: 'Get fresh milk from the store', completed: false },
+    { title: 'Read a book', description: 'Finish reading the current book', completed: false },
+    { title: 'Exercise', description: 'Do a 30-minute workout', completed: false },
+  ]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+      <h1 className="text-4xl font-bold text-white mb-10">My Cool To-Do List</h1>
+      <ul className="space-y-4 w-full max-w-md">
+        {todos.map(({ title, description, completed }, index) => (
+          <ToDoItem
+            key={index}
+            title={title}
+            description={description}
+            completed={completed}
+            onCompleteChanged={(newValue) => {
+              setTodos((prev) => {
+                const newTodos = [...prev];
+                newTodos[index].completed = newValue;
+                return newTodos;
+              });
+            }}
+            onRemove={() => {
+              setTodos((prev) => prev.filter((_, i) => i !== index));
+            }}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        ))}
+      </ul>
+      <NewToDoForm
+        onCreate={(title, description) => {
+          setTodos((prev) => [
+            ...prev,
+            { title, description, completed: false },
+          ]);
+        }}
+      />
     </div>
+  );
+}
+
+function ToDoItem({
+  title,
+  description,
+  completed,
+  onCompleteChanged,
+  onRemove,
+}: {
+  title: string;
+  description: string;
+  completed: boolean;
+  onCompleteChanged: (newValue: boolean) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <li className={`flex items-center gap-4 p-4 rounded-lg shadow-lg transform transition-all duration-300 ease-out ${completed ? 'bg-green-200' : 'bg-white'} hover:scale-105`}>
+      <input
+        type="checkbox"
+        checked={completed}
+        onChange={(e) => onCompleteChanged(e.target.checked)}
+        className="form-checkbox h-6 w-6 text-green-500"
+      />
+      <div className="flex flex-col flex-grow">
+        <p className={`font-semibold text-xl ${completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>{title}</p>
+        <p className="text-sm text-gray-600">{description}</p>
+      </div>
+      <button
+        type="button"
+        className="text-red-500 hover:text-red-700"
+        onClick={onRemove}
+      >
+        Remove
+      </button>
+    </li>
   );
 }
