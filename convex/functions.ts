@@ -3,7 +3,13 @@ import { v } from 'convex/values';
 
 export const listTodos = query({
     handler: async (ctx) => {
-        return await ctx.db.query("todos").collect();
+        const user = await await ctx.auth.getUserIdentity();
+        if (!user) {
+            throw new Error("You must be logged in to create a todo");
+        }
+        return await ctx.db.query("todos")
+            .filter(q => q.eq(q.field("userId"), user.tokenIdentifier))
+            .collect()
     }
 });
 
@@ -13,10 +19,15 @@ export const createTodo = mutation({
         description: v.string(),
     },
     handler: async (ctx, args) => {
+        const user = await await ctx.auth.getUserIdentity();
+        if (!user) {
+            throw new Error("You must be logged in to create a todo");
+        }
         return await ctx.db.insert("todos", { 
             title: args.title, 
             description: args.description, 
-            completed: false 
+            completed: false,
+            userId: user.tokenIdentifier
         });
     }
 })
