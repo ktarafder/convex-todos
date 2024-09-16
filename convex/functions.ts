@@ -1,12 +1,10 @@
 import { mutation, query } from './_generated/server';
 import { v } from 'convex/values';
+import { requireUser } from './helpers';
 
 export const listTodos = query({
     handler: async (ctx) => {
-        const user = await await ctx.auth.getUserIdentity();
-        if (!user) {
-            throw new Error("You must be logged in to create a todo");
-        }
+        const user = await requireUser(ctx);
         return await ctx.db.query("todos")
             .withIndex("by_user_id", q => q.eq("userId", user.tokenIdentifier))
             .collect()
@@ -19,10 +17,7 @@ export const createTodo = mutation({
         description: v.string(),
     },
     handler: async (ctx, args) => {
-        const user = await await ctx.auth.getUserIdentity();
-        if (!user) {
-            throw new Error("You must be logged in to create a todo");
-        }
+        const user = await requireUser(ctx);
         return await ctx.db.insert("todos", { 
             title: args.title, 
             description: args.description, 
@@ -38,6 +33,11 @@ export const updateTodo = mutation({
         completed: v.boolean(),
     },
     handler: async (ctx, args) => {
+        const user = await requireUser(ctx);
+        const todo = await ctx.db.get(args.id);
+        if (todo?.userId !== user.tokenIdentifier) {
+            throw new Error("You do not have permission to update this todo");
+        }
         await ctx.db.patch(args.id, {
             completed: args.completed 
         });
@@ -49,6 +49,11 @@ export const deleteTodo = mutation({
         id: v.id("todos"),
     },
     handler: async (ctx, args) => {
+        const user = await requireUser(ctx);
+        const todo = await ctx.db.get(args.id);
+        if (todo?.userId !== user.tokenIdentifier) {
+            throw new Error("You do not have permission to update this todo");
+        }
         await ctx.db.delete(args.id);
     }
 });
