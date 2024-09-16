@@ -8,7 +8,7 @@ export const listTodos = query({
             throw new Error("You must be logged in to create a todo");
         }
         return await ctx.db.query("todos")
-            .filter(q => q.eq(q.field("userId"), user.tokenIdentifier))
+            .withIndex("by_user_id", q => q.eq("userId", user.tokenIdentifier))
             .collect()
     }
 });
